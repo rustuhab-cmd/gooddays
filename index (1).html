@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#14212b">
+<title>Экспедиция для Марины 🧭</title>
+<style>
+:root{--night:#14212b;--green:#2d5a4a;--gold:#e3b04b;--paper:#f6ecd6;--ink:#2b2a26}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 20% 10%,#24475a 0,transparent 40%),var(--night);font-family:Georgia,"Times New Roman",serif;color:var(--ink);overflow-x:hidden}
+.card{width:min(100%,440px);background:var(--paper);border-radius:20px;padding:26px 22px;box-shadow:0 20px 60px #0008,inset 0 0 0 3px #e3d3ac,inset 0 0 0 5px var(--paper),inset 0 0 0 6px #cdb98a;text-align:center}
+.keys{font:700 .9rem system-ui,sans-serif;color:var(--green);letter-spacing:.04em;margin-bottom:6px;min-height:1.3em}
+h1{font-size:clamp(1.8rem,7.5vw,2.5rem);line-height:1.1;margin:12px 0;color:var(--green)}
+h2{font-size:1.35rem;margin:10px 0;color:var(--green)}
+p{font-family:system-ui,sans-serif;line-height:1.6;color:#4a463b;margin:10px 0}
+.icon{font-size:64px;margin:6px 0}
+button{font:700 1rem system-ui,sans-serif;border:0;border-radius:12px;padding:14px 20px;min-height:48px;cursor:pointer;transition:transform .15s,opacity .2s;max-width:100%}
+button:active{transform:scale(.96)}
+.go{background:var(--green);color:#fff;box-shadow:0 5px 0 #1c3a30}
+.alt{background:#fff8e6;color:var(--green);border:2px solid #d9c79a}
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:18px;align-items:center}
+.hidden{display:none!important}
+.hint{min-height:1.5em;font:.9rem system-ui,sans-serif;color:#8a5a2b;margin:10px 0 0}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:16px}
+.cell{font-size:30px;padding:8px 0;background:#fff8e6;border:2px solid #d9c79a;border-radius:12px;min-height:56px}
+.cell.bad{opacity:.35;pointer-events:none}
+.code{font:700 1.7rem ui-monospace,monospace;letter-spacing:.12em;color:var(--green);background:#fff8e6;border:2px dashed #cdb98a;border-radius:12px;padding:14px 8px;margin:14px 0}
+input{width:100%;font:700 1.15rem system-ui,sans-serif;text-align:center;border:2px solid #cdb98a;border-radius:12px;padding:13px;background:#fffdf5;color:var(--ink)}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
+.opts button{padding:18px 8px;background:#fff8e6;border:2px solid #d9c79a;color:var(--green)}
+.chests{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+.chest{font:700 .78rem system-ui,sans-serif;min-width:0;overflow-wrap:anywhere;padding:14px 2px;background:#fff8e6;border:2px solid #d9c79a;border-radius:12px;color:var(--green);min-height:92px}
+.chest.on{background:var(--green);color:#fff;border-color:var(--green);font-size:.66rem;overflow-wrap:normal;word-break:normal}
+.chest b{display:block;font-size:30px;margin-bottom:4px}
+.msg{background:#fffdf5;border:2px dashed #cdb98a;border-radius:12px;padding:14px;color:var(--green);font:600 1rem system-ui,sans-serif;line-height:1.5}
+.shake{animation:sh .4s}
+@keyframes sh{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.pop{animation:pop .5s}
+@keyframes pop{50%{transform:scale(1.25) rotate(-6deg)}}
+.conf{position:fixed;pointer-events:none;font-size:22px;animation:fall 2.6s ease-in forwards;top:-30px;z-index:5}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.8}}
+@media (prefers-reduced-motion:reduce){.conf,.pop,.shake{animation:none}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="keys" id="keys"></div>
+
+  <section id="s0">
+    <div class="icon" id="compass">🧭</div>
+    <h1>Марина,<br>это Кирилл</h1>
+    <p>Первая встреча была отличной, так что я организовал экспедицию «Координаты неизвестны».</p>
+    <p>Пройди 4 испытания, собери 4 ключа и получишь приглашение. Подсказки разрешены.</p>
+    <div class="actions"><button class="go" onclick="go(1)">Начать экспедицию</button></div>
+  </section>
+
+  <section id="s1" class="hidden">
+    <div class="icon">🔍</div>
+    <h2>Испытание 1: найди сердце</h2>
+    <p>Среди цветов спрятано одно сердце. Нажимай осторожно.</p>
+    <div class="grid" id="grid"></div>
+    <p class="hint" id="h1"></p>
+  </section>
+
+  <section id="s2" class="hidden">
+    <div class="icon">🔐</div>
+    <h2>Испытание 2: шифр</h2>
+    <p>Каждое число — номер буквы в русском алфавите (А=1, Б=2, Ё=7). Расшифруй слово.</p>
+    <div class="code">13 · 10 · 12 · 1 · 25 · 11 · 1</div>
+    <input id="ans" placeholder="Твой ответ" autocomplete="off" enterkeyhint="done">
+    <div class="actions"><button class="go" onclick="check()">Проверить</button></div>
+    <p class="hint" id="h2"></p>
+  </section>
+
+  <section id="s3" class="hidden">
+    <div class="icon">🎯</div>
+    <h2>Испытание 3: формат</h2>
+    <p>Какой будет наша встреча? Выбирай то, что хочется сейчас.</p>
+    <div class="opts">
+      <button onclick="place(this,'кофе и разговоры','☕ Отличный выбор. Я заранее выучил меню.')">☕ Кофе</button>
+      <button onclick="place(this,'длинная прогулка','🚶 Беру удобные кроссовки и хорошее настроение.')">🚶 Прогулка</button>
+      <button onclick="place(this,'кино','🎬 Только чур, ты выбираешь фильм. Я выбираю попкорн.')">🎬 Кино</button>
+    </div>
+    <p class="hint" id="h3"></p>
+  </section>
+
+  <section id="s4" class="hidden">
+    <div class="icon">🗺️</div>
+    <h2>Испытание 4: сундуки</h2>
+    <p>В каждом сундуке лежит день. Открой любой, а потом можешь выбрать другой.</p>
+    <div class="chests" id="chests"></div>
+    <p class="hint" id="h4">Нажми на сундук</p>
+    <div class="actions"><button class="go hidden" id="take" onclick="finish()">Беру этот день</button></div>
+  </section>
+
+  <section id="s5" class="hidden">
+    <div class="icon pop">🏆</div>
+    <h1>Экспедиция пройдена!</h1>
+    <p>Все 4 ключа у тебя. Вот твоё приглашение:</p>
+    <p class="msg" id="invite"></p>
+    <label style="display:block;text-align:left;font:600 .95rem system-ui,sans-serif;color:#4a463b;margin:14px 0 4px">Во сколько тебе удобно? Время выбираешь ты.
+      <select id="time" onchange="buildReply()" style="width:100%;margin-top:7px;font:inherit;padding:12px;border:2px solid #cdb98a;border-radius:12px;background:#fffdf5;color:#2b2a26"><option>в 12:00</option><option>в 14:00</option><option>в 16:00</option><option selected>в 18:00</option><option>в 20:00</option></select>
+    </label>
+    <textarea id="out" readonly rows="4" onfocus="this.select()" style="width:100%;margin-top:14px;font:600 .95rem system-ui,sans-serif;line-height:1.45;border:2px solid #cdb98a;border-radius:12px;padding:12px;background:#fffdf5;color:#2b2a26;resize:none"></textarea>
+    <div class="actions" style="margin-top:12px">
+      <button class="go" onclick="copyMsg()">Скопировать ответ</button>
+    </div>
+    <p class="hint" id="h5"></p>
+  </section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+let keys=0,chosenPlace='',chosenDay='';
+function renderKeys(){$('keys').textContent=keys?'🗝️'.repeat(keys)+'·'.repeat(4-keys)+'  '+keys+' из 4':''}
+function go(n){document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));$('s'+n).classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}
+function confetti(k){const e=['🎉','✨','💛','🗝️','⭐'];for(let i=0;i<(k||18);i++){const c=document.createElement('span');c.className='conf';c.textContent=e[i%e.length];c.style.left=Math.random()*100+'vw';c.style.animationDelay=Math.random()*.7+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),3600)}}
+function gotKey(next){keys++;renderKeys();confetti(14);setTimeout(()=>go(next),900)}
+$('compass').onclick=function(){this.classList.remove('pop');void this.offsetWidth;this.classList.add('pop')};
+
+/* 1 */
+const flowers=['🌸','🌼','🌷','🌻','🌹','🪻'],hints1=['Это просто цветочек 🌸','Мимо. Но у тебя хороший вкус','Тут тоже клумба','Сердце прячется хорошо','Горячо… нет, всё ещё холодно','Ты была близко. Наверное','Кирилл ждёт и держит за тебя кулаки'];
+let miss=0;
+(function(){const t=Math.floor(Math.random()*16),g=$('grid');for(let i=0;i<16;i++){const b=document.createElement('button');b.className='cell';b.textContent=flowers[Math.floor(Math.random()*flowers.length)];b.setAttribute('aria-label','Клетка '+(i+1));b.onclick=()=>{if(i===t){b.textContent='💗';b.classList.add('pop');$('h1').textContent='Нашла! Ключ 1 у тебя 🗝️';gotKey(2)}else{b.classList.add('bad');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');$('h1').textContent=hints1[Math.min(miss++,hints1.length-1)]}};g.appendChild(b)}})();
+
+/* 2 */
+let tries=0;
+function check(){
+  const v=$('ans').value.trim().toLowerCase().replace(/ё/g,'е');
+  if(v==='милашка'){$('h2').textContent='Расшифровано. Ключ 2 у тебя 🗝️';gotKey(3);return}
+  tries++;const c=$('ans').closest('section');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');
+  $('h2').textContent=tries===1?'Не то. Проверь, как считается алфавит.':tries===2?'Подсказка: слово начинается на М, и оно про тебя.':'Так Кирилл о тебе думает 😄 Напиши это слово.';
+}
+$('ans').addEventListener('keydown',e=>{if(e.key==='Enter')check()});
+
+/* 3 */
+function place(b,p,t){chosenPlace=p;$('h3').textContent=t+' Ключ 3 у тебя 🗝️';b.classList.add('pop');[...b.parentNode.children].forEach(x=>x.disabled=true);gotKey(4)}
+
+/* 4 */
+const days=[['☀️','в воскресенье'],['🌙','в понедельник'],['🌿','в четверг']].sort(()=>Math.random()-.5);
+const cc=$('chests');days.forEach((d,i)=>{const b=document.createElement('button');b.className='chest';b.innerHTML='<b>🎁</b>Сундук '+(i+1);b.onclick=()=>{[...cc.children].forEach((x,j)=>{x.classList.toggle('on',j===i);if(j!==i){x.innerHTML='<b>🎁</b>Сундук '+(j+1)}});b.innerHTML='<b>'+d[0]+'</b>'+d[1].replace('в ','');chosenDay=d[1];$('h4').textContent='Ты можешь взять этот день или открыть другой сундук.';$('take').classList.remove('hidden')};cc.appendChild(b)});
+
+function finish(){
+  keys++;renderKeys();confetti(30);
+  $('invite').textContent='Марина, Кирилл приглашает тебя на вторую встречу '+chosenDay+'. Формат: '+chosenPlace+'. Время выбираешь ты, а место обсудим вместе.';
+  buildReply();
+  go(5);
+}
+let reply='';
+function buildReply(){
+  reply='Кирилл, я прошла экспедицию! 🗝️ Встречаемся '+chosenDay+' '+$('time').value+', формат: '+chosenPlace+'. Место обсудим 💛';
+  $('out').value=reply;
+}
+async function copyMsg(){
+  buildReply();
+  let ok=false;
+  try{await navigator.clipboard.writeText(reply);ok=true}catch(e){}
+  if(!ok){try{const o=$('out');o.removeAttribute('readonly');o.focus();o.select();o.setSelectionRange(0,9999);ok=document.execCommand('copy');o.setAttribute('readonly','');o.blur()}catch(e){}}
+  $('h5').textContent=ok?'Скопировано. Отправь мне в личные сообщения 💛':'Не вышло. Нажми на текст выше, выбери «Копировать» и отправь мне 💛';
+}
+</script>
+</body>
+</html>
